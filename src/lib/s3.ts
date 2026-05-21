@@ -1,5 +1,7 @@
 import {
+  DeleteObjectsCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListBucketsCommand,
   ListObjectsV2Command,
   PutObjectCommand,
@@ -81,6 +83,16 @@ export type PresignedUploadRequest = {
 export type PresignedDownloadRequest = {
   bucket: string;
   key: string;
+};
+
+export type S3ObjectMetadata = {
+  bucket: string;
+  key: string;
+  contentLength: number | null;
+  contentType: string | null;
+  etag: string | null;
+  lastModified: string | null;
+  metadata: Record<string, string>;
 };
 
 export function createS3Client(connection: ConnectionSession) {
@@ -287,6 +299,107 @@ export async function createPresignedDownloadUrl(
   }
 }
 
+export async function createFolder(
+  connection: ConnectionSession,
+  bucketName: string,
+  folderPath: string,
+) {
+  const client = createS3Client(connection);
+  const bucket = normalizeBucketName(bucketName);
+  const key = normalizeFolderKey(folderPath);
+
+  try {
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: "",
+        ContentType: "application/x-directory",
+      }),
+    );
+
+    return { bucket, key };
+  } catch (error) {
+    throw mapS3Error(error);
+  }
+}
+
+export async function deleteEntry(
+  connection: ConnectionSession,
+  bucketName: string,
+  key: string,
+) {
+  const bucket = normalizeBucketName(bucketName);
+  const normalizedKey = key.endsWith("/")
+    ? normalizeFolderKey(key)
+    : normalizeObjectKey(key);
+
+  const keysToDelete = normalizedKey.endsWith("/")
+    ? await listAllKeysForPrefix(connection, bucket, normalizedKey)
+    : [normalizedKey];
+
+  if (!keysToDelete.length) {
+    return {
+      bucket,
+      deletedKeys: [],
+    };
+  }
+
+  const client = createS3Client(connection);
+
+  try {
+    for (const chunk of chunkKeys(keysToDelete, 1000)) {
+      await client.send(
+        new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: {
+            Objects: chunk.map((entryKey) => ({ Key: entryKey })),
+            Quiet: true,
+          },
+        }),
+      );
+    }
+
+    return {
+      bucket,
+      deletedKeys: keysToDelete,
+    };
+  } catch (error) {
+    throw mapS3Error(error);
+  }
+}
+
+export async function getObjectMetadata(
+  connection: ConnectionSession,
+  bucketName: string,
+  key: string,
+): Promise<S3ObjectMetadata> {
+  const client = createS3Client(connection);
+  const bucket = normalizeBucketName(bucketName);
+  const normalizedKey = normalizeObjectKey(key);
+
+  try {
+    const response = await client.send(
+      new HeadObjectCommand({
+        Bucket: bucket,
+        Key: normalizedKey,
+      }),
+    );
+
+    return {
+      bucket,
+      key: normalizedKey,
+      contentLength: response.ContentLength ?? null,
+      contentType: response.ContentType ?? null,
+      etag: response.ETag ?? null,
+      lastModified: response.LastModified?.toISOString() ?? null,
+      metadata: response.Metadata ?? {},
+    };
+  } catch (error) {
+    throw mapS3Error(error);
+  }
+}
+
 export function normalizeBucketName(value: string) {
   return value.trim();
 }
@@ -369,6 +482,52 @@ export function mapS3Error(error: unknown) {
     "Could not validate the connection. Check the endpoint, region, credentials, and addressing style.",
     { cause: error },
   );
+}
+
+async function listAllKeysForPrefix(
+  connection: ConnectionSession,
+  bucket: string,
+  prefix: string,
+) {
+  const client = createS3Client(connection);
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+
+  try {
+    do {
+      const response = await client.send(
+        new ListObjectsV2Command({
+          Bucket: bucket,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+        }),
+      );
+
+      for (const entry of response.Contents || []) {
+        if (entry.Key) {
+          keys.push(entry.Key);
+        }
+      }
+
+      continuationToken = response.IsTruncated
+        ? response.NextContinuationToken
+        : undefined;
+    } while (continuationToken);
+
+    return Array.from(new Set(keys));
+  } catch (error) {
+    throw mapS3Error(error);
+  }
+}
+
+function chunkKeys(keys: string[], size: number) {
+  const chunks: string[][] = [];
+
+  for (let index = 0; index < keys.length; index += size) {
+    chunks.push(keys.slice(index, index + size));
+  }
+
+  return chunks;
 }
 
 function hasNamedError(error: unknown, names: string[]) {

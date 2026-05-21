@@ -245,7 +245,13 @@
   border-bottom: 0;
 }
 
-a.objectRow:hover {
+.objectRowActive {
+  background: rgba(217, 119, 6, 0.08);
+}
+
+a.objectRow:hover,
+.objectLink:hover,
+.objectLinkButton:hover {
   background: rgba(217, 119, 6, 0.05);
 }
 
@@ -259,6 +265,24 @@ a.objectRow:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.objectLink,
+.objectLinkButton {
+  display: block;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.inlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
 }
 
 .inlineActionButton {

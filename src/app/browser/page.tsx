@@ -2,7 +2,6 @@ import Link from "next/link";
 import { appConfig } from "@/lib/config";
 import { getAddressingStyleLabel, maskAccessKey } from "@/lib/connection";
 import { logoutAction } from "@/app/login/actions";
-import { DownloadButton } from "@/app/browser/download-button";
 import { getSession } from "@/lib/session";
 import {
   getS3ConnectionSummary,
@@ -15,7 +14,7 @@ import {
   type S3BrowserListing,
 } from "@/lib/s3";
 import { redirect } from "next/navigation";
-import { UploadControl } from "./upload-control";
+import { BrowserWorkspace } from "./browser-workspace";
 import styles from "./page.module.css";
 
 type BrowserPageProps = {
@@ -56,8 +55,6 @@ export default async function BrowserPage({ searchParams }: BrowserPageProps) {
       listingError = mapS3Error(error).message;
     }
   }
-
-  const breadcrumbSegments = getBreadcrumbSegments(activePrefix);
 
   return (
     <main className={styles.page}>
@@ -136,141 +133,12 @@ export default async function BrowserPage({ searchParams }: BrowserPageProps) {
           </div>
         </header>
 
-        <section className={styles.toolbar}>
-          <div className={styles.toolbarMeta}>
-            <strong>Current path</strong>
-            <div className={styles.breadcrumbs}>
-              <Link
-                className={styles.breadcrumbLink}
-                href={activeBucket ? buildBrowserHref(activeBucket) : "/browser"}
-              >
-                {activeBucket || "No bucket selected"}
-              </Link>
-              {breadcrumbSegments.map((segment) => (
-                <Link
-                  className={styles.breadcrumbLink}
-                  href={buildBrowserHref(activeBucket, segment.prefix)}
-                  key={segment.prefix}
-                >
-                  / {segment.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className={styles.toolbarActions}>
-            <UploadControl
-              bucket={activeBucket}
-              disabled={!activeBucket || Boolean(listingError)}
-              prefix={activePrefix}
-            />
-            <button className={styles.toolbarButton} type="button" disabled>
-              Create folder
-            </button>
-            <button className={styles.toolbarButton} type="button" disabled>
-              Delete
-            </button>
-          </div>
-        </section>
-
-        <section className={styles.mainContent}>
-          <div className={styles.tableCard}>
-            <div>
-              <div className={styles.mainHeader}>
-                <h2>Objects</h2>
-                <span>
-                  {listing
-                    ? `${listing.folders.length + listing.objects.length} visible entries`
-                    : "not loaded"}
-                </span>
-              </div>
-              <p className={styles.tableMeta}>
-                Folder navigation uses prefix and delimiter semantics from the
-                S3-compatible API.
-              </p>
-            </div>
-
-            {listingError ? (
-              <div className={styles.errorState}>{listingError}</div>
-            ) : !activeBucket ? (
-              <div className={styles.emptyState}>
-                No bucket selected yet. Choose a bucket from the left sidebar.
-              </div>
-            ) : listing && listing.folders.length + listing.objects.length > 0 ? (
-              <div className={styles.objectTable}>
-              <div className={styles.tableHeader}>
-                <span>Name</span>
-                <span>Size</span>
-                <span>Updated</span>
-                <span>Action</span>
-              </div>
-
-                {listing.folders.map((folder) => (
-                  <Link
-                    className={styles.objectRow}
-                    href={buildBrowserHref(activeBucket, folder.prefix)}
-                    key={folder.key}
-                  >
-                    <div className={styles.objectCell}>
-                      <strong>{folder.name}/</strong>
-                      <span>Folder</span>
-                    </div>
-                    <span>-</span>
-                    <span>-</span>
-                    <span>-</span>
-                  </Link>
-                ))}
-
-                {listing.objects.map((object) => (
-                  <div className={styles.objectRow} key={object.key}>
-                    <div className={styles.objectCell}>
-                      <strong>{object.name}</strong>
-                      <span>{object.key}</span>
-                    </div>
-                    <span>{formatBytes(object.size)}</span>
-                    <span>{formatDate(object.lastModified)}</span>
-                    <DownloadButton bucket={activeBucket} objectKey={object.key} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.emptyState}>
-                This location is empty. Upload a file here to populate the current
-                prefix.
-              </div>
-            )}
-          </div>
-
-          <aside className={styles.metadataCard}>
-            <div>
-              <div className={styles.mainHeader}>
-                <h2>Listing context</h2>
-                <span>phase 4</span>
-              </div>
-              <p className={styles.tableMeta}>
-                Metadata preview for individual objects will be added in Phase 6.
-              </p>
-            </div>
-
-            <dl className={styles.metaList}>
-              <div className={styles.metaRow}>
-                <dt>Bucket</dt>
-                <dd>{activeBucket || "-"}</dd>
-              </div>
-              <div className={styles.metaRow}>
-                <dt>Prefix</dt>
-                <dd>{activePrefix || "/"}</dd>
-              </div>
-              <div className={styles.metaRow}>
-                <dt>Folders</dt>
-                <dd>{listing?.folders.length ?? 0}</dd>
-              </div>
-              <div className={styles.metaRow}>
-                <dt>Objects</dt>
-                <dd>{listing?.objects.length ?? 0}</dd>
-              </div>
-            </dl>
-          </aside>
-        </section>
+        <BrowserWorkspace
+          bucket={activeBucket}
+          listing={listing}
+          listingError={listingError}
+          prefix={activePrefix}
+        />
       </section>
     </main>
   );
@@ -289,36 +157,6 @@ function buildBrowserHref(bucket?: string, prefix?: string) {
 
   const query = params.toString();
   return query ? `/browser?${query}` : "/browser";
-}
-
-function getBreadcrumbSegments(prefix: string) {
-  if (!prefix) {
-    return [];
-  }
-
-  const parts = prefix.split("/").filter(Boolean);
-
-  return parts.map((name, index) => ({
-    name,
-    prefix: `${parts.slice(0, index + 1).join("/")}/`,
-  }));
-}
-
-function formatBytes(value: number) {
-  if (value < 1024) {
-    return `${value} B`;
-  }
-
-  const units = ["KB", "MB", "GB", "TB"];
-  let size = value / 1024;
-  let unitIndex = 0;
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex += 1;
-  }
-
-  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
 function formatDate(value: string | null) {

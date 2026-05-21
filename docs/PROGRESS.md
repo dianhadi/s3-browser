@@ -121,13 +121,13 @@ Exit criteria:
 
 Goal: complete the agreed MVP operations.
 
-- [ ] Implement create-folder endpoint
-- [ ] Implement create-folder UI
-- [ ] Implement delete object endpoint
-- [ ] Implement delete folder flow
-- [ ] Add selection UX for delete actions
-- [ ] Implement metadata endpoint
-- [ ] Build metadata preview panel/modal
+- [x] Implement create-folder endpoint
+- [x] Implement create-folder UI
+- [x] Implement delete object endpoint
+- [x] Implement delete folder flow
+- [x] Add selection UX for delete actions
+- [x] Implement metadata endpoint
+- [x] Build metadata preview panel/modal
 
 Exit criteria:
 
@@ -169,6 +169,8 @@ Exit criteria:
 - Replaced browser placeholder data with real S3 listing, breadcrumb navigation, and empty/error states
 - Added presigned upload and download endpoints
 - Added browser-side upload progress, listing refresh after upload, and direct download actions
+- Added create-folder, delete-entry, and metadata endpoints
+- Added client-side selection, delete flow, folder creation, and metadata preview in the browser workspace
 
 ## Update Template
 
