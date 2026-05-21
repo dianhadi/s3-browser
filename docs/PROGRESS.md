@@ -90,13 +90,13 @@ Exit criteria:
 
 Goal: browse buckets and navigate object hierarchies.
 
-- [ ] Implement list buckets endpoint
-- [ ] Implement list objects by bucket/prefix endpoint
-- [ ] Support folder-style browsing via prefix and delimiter
-- [ ] Build bucket selector UI
-- [ ] Build breadcrumb navigation UI
-- [ ] Build object/folder list UI
-- [ ] Add loading and empty states
+- [x] Implement list buckets endpoint
+- [x] Implement list objects by bucket/prefix endpoint
+- [x] Support folder-style browsing via prefix and delimiter
+- [x] Build bucket selector UI
+- [x] Build breadcrumb navigation UI
+- [x] Build object/folder list UI
+- [x] Add loading and empty states
 
 Exit criteria:
 
@@ -165,6 +165,8 @@ Exit criteria:
 - Removed remote font dependency so local builds do not need external font fetches
 - Added reusable S3 client abstraction, endpoint summaries, and object key normalization helpers
 - Unified session validation around shared connection schema and typed S3 error mapping
+- Added live bucket and object browsing with `/api/buckets` and `/api/objects`
+- Replaced browser placeholder data with real S3 listing, breadcrumb navigation, and empty/error states
 
 ## Update Template
 

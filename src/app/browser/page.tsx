@@ -1,24 +1,29 @@
+import Link from "next/link";
 import { appConfig } from "@/lib/config";
-import { maskAccessKey } from "@/lib/connection";
+import { getAddressingStyleLabel, maskAccessKey } from "@/lib/connection";
 import { logoutAction } from "@/app/login/actions";
 import { getSession } from "@/lib/session";
-import { getS3ConnectionSummary } from "@/lib/s3";
+import {
+  getS3ConnectionSummary,
+  listBuckets,
+  listObjects,
+  mapS3Error,
+  normalizeBucketName,
+  normalizePrefix,
+  type S3BucketSummary,
+  type S3BrowserListing,
+} from "@/lib/s3";
 import { redirect } from "next/navigation";
 import styles from "./page.module.css";
 
-const placeholderBuckets = [
-  { name: "media-archive", objects: "214 objects" },
-  { name: "finance-export", objects: "57 objects" },
-  { name: "minio-test", objects: "empty" },
-];
+type BrowserPageProps = {
+  searchParams?: Promise<{
+    bucket?: string;
+    prefix?: string;
+  }>;
+};
 
-const placeholderObjects = [
-  { name: "reports/", size: "-", updated: "folder" },
-  { name: "reports/q1-summary.pdf", size: "1.8 MB", updated: "2026-05-20" },
-  { name: "reports/q2-summary.pdf", size: "2.1 MB", updated: "2026-05-18" },
-];
-
-export default async function BrowserPage() {
+export default async function BrowserPage({ searchParams }: BrowserPageProps) {
   const session = await getSession();
 
   if (!session) {
@@ -26,27 +31,64 @@ export default async function BrowserPage() {
   }
 
   const summary = getS3ConnectionSummary(session);
+  const params = (await searchParams) || {};
+
+  let buckets: S3BucketSummary[] = [];
+  let listing: S3BrowserListing | null = null;
+  let listingError: string | null = null;
+
+  try {
+    buckets = await listBuckets(session);
+  } catch (error) {
+    listingError = mapS3Error(error).message;
+  }
+
+  const requestedBucket = normalizeBucketName(params.bucket || "");
+  const activeBucket = requestedBucket || buckets[0]?.name || "";
+  const activePrefix = normalizePrefix(params.prefix || "");
+
+  if (activeBucket && !listingError) {
+    try {
+      listing = await listObjects(session, activeBucket, activePrefix);
+    } catch (error) {
+      listingError = mapS3Error(error).message;
+    }
+  }
+
+  const breadcrumbSegments = getBreadcrumbSegments(activePrefix);
 
   return (
     <main className={styles.page}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
           <h1>{appConfig.appName}</h1>
-          <p>Connected session placeholder for bucket and object navigation.</p>
+          <p>Live S3-compatible bucket and object browsing.</p>
         </div>
 
         <section className={styles.bucketPanel}>
           <div className={styles.bucketHeader}>
             <h2>Buckets</h2>
-            <span>3</span>
+            <span>{buckets.length}</span>
           </div>
           <div className={styles.bucketList}>
-            {placeholderBuckets.map((bucket) => (
-              <div className={styles.bucketRow} key={bucket.name}>
-                <strong>{bucket.name}</strong>
-                <span>{bucket.objects}</span>
-              </div>
-            ))}
+            {buckets.length ? (
+              buckets.map((bucket) => {
+                const isActive = bucket.name === activeBucket;
+
+                return (
+                  <Link
+                    className={`${styles.bucketRow} ${isActive ? styles.bucketRowActive : ""}`}
+                    href={buildBrowserHref(bucket.name)}
+                    key={bucket.name}
+                  >
+                    <strong>{bucket.name}</strong>
+                    <span>{formatCreatedAt(bucket.createdAt)}</span>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className={styles.bucketEmpty}>No buckets available.</div>
+            )}
           </div>
         </section>
 
@@ -67,7 +109,7 @@ export default async function BrowserPage() {
           <div className={styles.quickAction}>
             <strong>Session</strong>
             <span>
-              {summary.addressingLabel}
+              {getAddressingStyleLabel(session.addressingStyle)}
               {" / "}
               {maskAccessKey(session.accessKeyId)}
             </span>
@@ -86,8 +128,8 @@ export default async function BrowserPage() {
           <div>
             <h2>Bucket browser</h2>
             <p className={styles.statusNote}>
-              Placeholder UI structure for bucket lists, breadcrumbs, object
-              tables, and the metadata panel.
+              Browse folders and objects directly from the connected
+              S3-compatible storage.
             </p>
           </div>
         </header>
@@ -95,7 +137,23 @@ export default async function BrowserPage() {
         <section className={styles.toolbar}>
           <div className={styles.toolbarMeta}>
             <strong>Current path</strong>
-            <p>/media-archive/reports/</p>
+            <div className={styles.breadcrumbs}>
+              <Link
+                className={styles.breadcrumbLink}
+                href={activeBucket ? buildBrowserHref(activeBucket) : "/browser"}
+              >
+                {activeBucket || "No bucket selected"}
+              </Link>
+              {breadcrumbSegments.map((segment) => (
+                <Link
+                  className={styles.breadcrumbLink}
+                  href={buildBrowserHref(activeBucket, segment.prefix)}
+                  key={segment.prefix}
+                >
+                  / {segment.name}
+                </Link>
+              ))}
+            </div>
           </div>
           <div className={styles.toolbarActions}>
             <button className={styles.toolbarButton} type="button" disabled>
@@ -115,67 +173,93 @@ export default async function BrowserPage() {
             <div>
               <div className={styles.mainHeader}>
                 <h2>Objects</h2>
-                <span>placeholder data</span>
+                <span>
+                  {listing
+                    ? `${listing.folders.length + listing.objects.length} visible entries`
+                    : "not loaded"}
+                </span>
               </div>
               <p className={styles.tableMeta}>
-                This phase only prepares the display structure. Real data will
-                be connected when the bucket and object listing endpoints are
-                available.
+                Folder navigation uses prefix and delimiter semantics from the
+                S3-compatible API.
               </p>
             </div>
 
-            <div className={styles.objectTable}>
-              <div className={styles.tableHeader}>
-                <span>Name</span>
-                <span>Size</span>
-                <span>Updated</span>
+            {listingError ? (
+              <div className={styles.errorState}>{listingError}</div>
+            ) : !activeBucket ? (
+              <div className={styles.emptyState}>
+                No bucket selected yet. Choose a bucket from the left sidebar.
               </div>
-              {placeholderObjects.map((object) => (
-                <div className={styles.objectRow} key={object.name}>
-                  <div className={styles.objectCell}>
-                    <strong>{object.name}</strong>
-                    <span>Placeholder item</span>
-                  </div>
-                  <span>{object.size}</span>
-                  <span>{object.updated}</span>
+            ) : listing && listing.folders.length + listing.objects.length > 0 ? (
+              <div className={styles.objectTable}>
+                <div className={styles.tableHeader}>
+                  <span>Name</span>
+                  <span>Size</span>
+                  <span>Updated</span>
                 </div>
-              ))}
-            </div>
 
-            <div className={styles.emptyState}>
-              Breadcrumbs, empty states, loading states, and selection states
-              will be refined in Phase 4 and Phase 6.
-            </div>
+                {listing.folders.map((folder) => (
+                  <Link
+                    className={styles.objectRow}
+                    href={buildBrowserHref(activeBucket, folder.prefix)}
+                    key={folder.key}
+                  >
+                    <div className={styles.objectCell}>
+                      <strong>{folder.name}/</strong>
+                      <span>Folder</span>
+                    </div>
+                    <span>-</span>
+                    <span>-</span>
+                  </Link>
+                ))}
+
+                {listing.objects.map((object) => (
+                  <div className={styles.objectRow} key={object.key}>
+                    <div className={styles.objectCell}>
+                      <strong>{object.name}</strong>
+                      <span>{object.key}</span>
+                    </div>
+                    <span>{formatBytes(object.size)}</span>
+                    <span>{formatDate(object.lastModified)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.emptyState}>
+                This location is empty. Upload files or create a folder in a
+                later phase.
+              </div>
+            )}
           </div>
 
           <aside className={styles.metadataCard}>
             <div>
               <div className={styles.mainHeader}>
-                <h2>Metadata</h2>
-                <span>preview</span>
+                <h2>Listing context</h2>
+                <span>phase 4</span>
               </div>
               <p className={styles.tableMeta}>
-                This panel will display `HeadObject` results or metadata for the
-                currently selected object.
+                Metadata preview for individual objects will be added in Phase 6.
               </p>
             </div>
 
             <dl className={styles.metaList}>
               <div className={styles.metaRow}>
                 <dt>Bucket</dt>
-                <dd>media-archive</dd>
+                <dd>{activeBucket || "-"}</dd>
               </div>
               <div className={styles.metaRow}>
-                <dt>Key</dt>
-                <dd>reports/q1-summary.pdf</dd>
+                <dt>Prefix</dt>
+                <dd>{activePrefix || "/"}</dd>
               </div>
               <div className={styles.metaRow}>
-                <dt>ETag</dt>
-                <dd>&quot;placeholder-etag&quot;</dd>
+                <dt>Folders</dt>
+                <dd>{listing?.folders.length ?? 0}</dd>
               </div>
               <div className={styles.metaRow}>
-                <dt>Content-Type</dt>
-                <dd>application/pdf</dd>
+                <dt>Objects</dt>
+                <dd>{listing?.objects.length ?? 0}</dd>
               </div>
             </dl>
           </aside>
@@ -183,4 +267,69 @@ export default async function BrowserPage() {
       </section>
     </main>
   );
+}
+
+function buildBrowserHref(bucket?: string, prefix?: string) {
+  const params = new URLSearchParams();
+
+  if (bucket) {
+    params.set("bucket", bucket);
+  }
+
+  if (prefix) {
+    params.set("prefix", normalizePrefix(prefix));
+  }
+
+  const query = params.toString();
+  return query ? `/browser?${query}` : "/browser";
+}
+
+function getBreadcrumbSegments(prefix: string) {
+  if (!prefix) {
+    return [];
+  }
+
+  const parts = prefix.split("/").filter(Boolean);
+
+  return parts.map((name, index) => ({
+    name,
+    prefix: `${parts.slice(0, index + 1).join("/")}/`,
+  }));
+}
+
+function formatBytes(value: number) {
+  if (value < 1024) {
+    return `${value} B`;
+  }
+
+  const units = ["KB", "MB", "GB", "TB"];
+  let size = value / 1024;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatCreatedAt(value: string | null) {
+  if (!value) {
+    return "created date unavailable";
+  }
+
+  return formatDate(value);
 }
