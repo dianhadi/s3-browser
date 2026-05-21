@@ -5,6 +5,7 @@ import {
   connectionInputSchema,
   normalizeConnectionInput,
 } from "@/lib/connection";
+import { toUserErrorMessage } from "@/lib/errors";
 import { validateS3Connection } from "@/lib/s3";
 import { createSession, destroySession } from "@/lib/session";
 
@@ -52,8 +53,10 @@ export async function loginAction(
     await createSession(connection);
   } catch (error) {
     return {
-      error:
-        error instanceof Error ? error.message : "Could not create the session.",
+      error: toUserErrorMessage(error, "Could not create the session.", [
+        connection.accessKeyId,
+        connection.secretAccessKey,
+      ]),
       fields: {
         endpoint: connection.endpoint,
         region: connection.region,

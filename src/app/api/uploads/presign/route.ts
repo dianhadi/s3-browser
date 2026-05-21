@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { toUserErrorMessage } from "@/lib/errors";
 import { getSession } from "@/lib/session";
 import {
   createPresignedUploadUrl,
@@ -50,7 +51,13 @@ export async function POST(request: NextRequest) {
     const mapped = mapS3Error(error);
 
     return NextResponse.json(
-      { error: mapped.message, code: mapped.code },
+      {
+        error: toUserErrorMessage(mapped, "Could not prepare the upload.", [
+          session.accessKeyId,
+          session.secretAccessKey,
+        ]),
+        code: mapped.code,
+      },
       { status: 400 },
     );
   }

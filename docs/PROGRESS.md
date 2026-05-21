@@ -18,6 +18,17 @@
 - [x] Upload/download mechanism: presigned URLs
 - [x] Initial scope: internal tool, local development first
 
+## Overall Status
+
+- [x] Phase 0 - Planning And Repo Setup
+- [x] Phase 1 - Application Skeleton
+- [x] Phase 2 - Auth And Session
+- [x] Phase 3 - S3 Client Abstraction
+- [x] Phase 4 - Bucket And Object Browsing
+- [x] Phase 5 - Upload And Download
+- [x] Phase 6 - Folder Creation, Delete, Metadata
+- [x] Phase 7 - Hardening And DX
+
 ## Phase 0 - Planning And Repo Setup
 
 - [x] Confirm product scope
@@ -137,12 +148,12 @@ Exit criteria:
 
 Goal: make the MVP usable and maintainable.
 
-- [ ] Improve error messages
-- [ ] Prevent secret leakage in logs
-- [ ] Add basic unit tests for helpers
-- [ ] Add smoke coverage for critical routes if practical
-- [ ] Document local setup in `README.md`
-- [ ] Review UI states for empty/loading/error cases
+- [x] Improve error messages
+- [x] Prevent secret leakage in logs
+- [x] Add basic unit tests for helpers
+- [x] Add smoke coverage for critical routes if practical
+- [x] Document local setup in `README.md`
+- [x] Review UI states for empty/loading/error cases
 
 Exit criteria:
 
@@ -171,6 +182,9 @@ Exit criteria:
 - Added browser-side upload progress, listing refresh after upload, and direct download actions
 - Added create-folder, delete-entry, and metadata endpoints
 - Added client-side selection, delete flow, folder creation, and metadata preview in the browser workspace
+- Added sanitized user-facing error handling to reduce secret leakage risk
+- Added Vitest-based helper tests and route smoke coverage
+- Expanded README with setup, commands, verification status, and runtime notes
 
 ## Update Template
 

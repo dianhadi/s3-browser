@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { toUserErrorMessage } from "@/lib/errors";
 import { getSession } from "@/lib/session";
 import { listBuckets, mapS3Error } from "@/lib/s3";
 
@@ -17,7 +18,10 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error: mapped.message,
+        error: toUserErrorMessage(mapped, "Could not list buckets.", [
+          session.accessKeyId,
+          session.secretAccessKey,
+        ]),
         code: mapped.code,
       },
       { status: 400 },

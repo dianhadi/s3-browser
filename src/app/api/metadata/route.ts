@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { toUserErrorMessage } from "@/lib/errors";
 import { getSession } from "@/lib/session";
 import {
   getObjectMetadata,
@@ -33,7 +34,13 @@ export async function GET(request: NextRequest) {
     const mapped = mapS3Error(error);
 
     return NextResponse.json(
-      { error: mapped.message, code: mapped.code },
+      {
+        error: toUserErrorMessage(mapped, "Could not load metadata.", [
+          session.accessKeyId,
+          session.secretAccessKey,
+        ]),
+        code: mapped.code,
+      },
       { status: 400 },
     );
   }
