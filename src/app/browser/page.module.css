@@ -1,0 +1,245 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 280px 1fr;
+}
+
+.sidebar {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 24px;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(39, 52, 70, 0.98), rgba(27, 36, 48, 1)),
+    var(--bg-sidebar);
+  color: var(--text-inverse);
+}
+
+.brand {
+  display: grid;
+  gap: 6px;
+}
+
+.brand h1 {
+  font-size: 1.6rem;
+  letter-spacing: -0.05em;
+}
+
+.brand p,
+.statusNote,
+.footer {
+  color: rgba(255, 253, 248, 0.7);
+  line-height: 1.6;
+}
+
+.bucketPanel,
+.quickActions {
+  display: grid;
+  gap: 12px;
+}
+
+.bucketHeader,
+.mainHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bucketHeader h2,
+.mainHeader h2 {
+  font-size: 1rem;
+}
+
+.bucketList,
+.objectTable {
+  border: 1px solid rgba(255, 253, 248, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.bucketRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: rgba(255, 253, 248, 0.06);
+  border-bottom: 1px solid rgba(255, 253, 248, 0.08);
+}
+
+.bucketRow:last-child {
+  border-bottom: 0;
+}
+
+.bucketRow strong,
+.quickAction strong,
+.objectCell strong {
+  font-size: 0.95rem;
+}
+
+.bucketRow span,
+.quickAction span,
+.objectCell span {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.quickAction {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.06);
+}
+
+.main {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+  padding: 18px 20px;
+}
+
+.toolbarMeta {
+  display: grid;
+  gap: 4px;
+}
+
+.toolbarMeta p {
+  color: var(--text-muted);
+}
+
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.toolbarButton {
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: var(--bg-panel-strong);
+  padding: 10px 14px;
+  color: var(--text-primary);
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
+  gap: 24px;
+}
+
+.tableCard,
+.metadataCard {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 28px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+  padding: 24px;
+}
+
+.tableMeta {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.tableHeader,
+.objectRow,
+.metaRow {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 140px 140px;
+  gap: 16px;
+  align-items: center;
+}
+
+.tableHeader {
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.objectRow {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(39, 52, 70, 0.08);
+}
+
+.objectRow:last-child {
+  border-bottom: 0;
+}
+
+.objectCell {
+  display: grid;
+  gap: 4px;
+}
+
+.emptyState {
+  border: 1px dashed var(--border-soft);
+  border-radius: 20px;
+  padding: 20px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.metaList {
+  display: grid;
+  gap: 12px;
+}
+
+.metaRow {
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(39, 52, 70, 0.08);
+}
+
+.metaRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.metaRow dt {
+  color: var(--text-muted);
+}
+
+.metaRow dd {
+  word-break: break-word;
+}
+
+@media (max-width: 1080px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar,
+  .main {
+    padding: 20px;
+  }
+
+  .tableHeader,
+  .objectRow {
+    grid-template-columns: 1fr;
+  }
+}

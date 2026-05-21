@@ -1,13 +1,17 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg-canvas: #f4efe4;
+  --bg-panel: rgba(255, 251, 244, 0.8);
+  --bg-panel-strong: #fffdf8;
+  --bg-sidebar: #1b2430;
+  --bg-sidebar-accent: #273446;
+  --border-soft: rgba(39, 52, 70, 0.14);
+  --text-primary: #1b2430;
+  --text-muted: #5f6772;
+  --text-inverse: #fffdf8;
+  --accent: #d97706;
+  --accent-strong: #b45309;
+  --danger: #c2410c;
+  --shadow-soft: 0 24px 64px rgba(27, 36, 48, 0.12);
 }
 
 html {
@@ -22,11 +26,12 @@ body {
 
 body {
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(217, 119, 6, 0.14), transparent 28%),
+    radial-gradient(circle at top right, rgba(39, 52, 70, 0.12), transparent 32%),
+    linear-gradient(180deg, #f7f2e8 0%, #f4efe4 100%);
+  font-family: var(--font-geist-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,8 +47,9 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }

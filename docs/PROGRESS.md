@@ -39,11 +39,11 @@ Goal: create a running Next.js foundation without S3 logic yet.
 
 - [x] Initialize Next.js with TypeScript and pnpm
 - [x] Configure linting and basic scripts
-- [ ] Create base app layout
-- [ ] Create initial route structure
-- [ ] Add placeholder login page
-- [ ] Add placeholder browser page
-- [ ] Add shared config and env example
+- [x] Create base app layout
+- [x] Create initial route structure
+- [x] Add placeholder login page
+- [x] Add placeholder browser page
+- [x] Add shared config and env example
 
 Exit criteria:
 
@@ -158,6 +158,8 @@ Exit criteria:
 - Locked key architecture decisions before scaffolding
 - Bootstrapped Next.js project with pnpm
 - Replaced template `README.md` with project-specific setup notes
+- Added Phase 1 route skeleton for `/login` and `/browser`
+- Added shared app config and `.env.example`
 
 ## Update Template
 
