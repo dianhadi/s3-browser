@@ -1,9 +1,12 @@
 import {
+  GetObjectCommand,
   ListBucketsCommand,
   ListObjectsV2Command,
+  PutObjectCommand,
   S3Client,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   getAddressingStyleLabel,
   getEndpointDetails,
@@ -67,6 +70,17 @@ export type S3BrowserListing = {
   prefix: string;
   folders: S3BrowserFolder[];
   objects: S3BrowserObject[];
+};
+
+export type PresignedUploadRequest = {
+  bucket: string;
+  key: string;
+  contentType?: string;
+};
+
+export type PresignedDownloadRequest = {
+  bucket: string;
+  key: string;
 };
 
 export function createS3Client(connection: ConnectionSession) {
@@ -210,6 +224,63 @@ export async function listObjects(
       prefix: normalizedPrefix,
       folders,
       objects,
+    };
+  } catch (error) {
+    throw mapS3Error(error);
+  }
+}
+
+export async function createPresignedUploadUrl(
+  connection: ConnectionSession,
+  request: PresignedUploadRequest,
+) {
+  const client = createS3Client(connection);
+  const bucket = normalizeBucketName(request.bucket);
+  const key = normalizeObjectKey(request.key);
+
+  try {
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: request.contentType || "application/octet-stream",
+    });
+
+    const url = await getSignedUrl(client, command, { expiresIn: 900 });
+
+    return {
+      url,
+      bucket,
+      key,
+      method: "PUT" as const,
+    };
+  } catch (error) {
+    throw mapS3Error(error);
+  }
+}
+
+export async function createPresignedDownloadUrl(
+  connection: ConnectionSession,
+  request: PresignedDownloadRequest,
+) {
+  const client = createS3Client(connection);
+  const bucket = normalizeBucketName(request.bucket);
+  const key = normalizeObjectKey(request.key);
+  const fileName = key.split("/").pop() || "download";
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${fileName}"`,
+    });
+
+    const url = await getSignedUrl(client, command, { expiresIn: 900 });
+
+    return {
+      url,
+      bucket,
+      key,
+      method: "GET" as const,
     };
   } catch (error) {
     throw mapS3Error(error);

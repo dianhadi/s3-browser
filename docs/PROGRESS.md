@@ -106,12 +106,12 @@ Exit criteria:
 
 Goal: transfer files using presigned URLs.
 
-- [ ] Implement presigned upload endpoint
-- [ ] Implement frontend upload flow
-- [ ] Show upload progress and result state
-- [ ] Refresh listing after upload
-- [ ] Implement presigned download endpoint
-- [ ] Implement frontend download action
+- [x] Implement presigned upload endpoint
+- [x] Implement frontend upload flow
+- [x] Show upload progress and result state
+- [x] Refresh listing after upload
+- [x] Implement presigned download endpoint
+- [x] Implement frontend download action
 
 Exit criteria:
 
@@ -167,6 +167,8 @@ Exit criteria:
 - Unified session validation around shared connection schema and typed S3 error mapping
 - Added live bucket and object browsing with `/api/buckets` and `/api/objects`
 - Replaced browser placeholder data with real S3 listing, breadcrumb navigation, and empty/error states
+- Added presigned upload and download endpoints
+- Added browser-side upload progress, listing refresh after upload, and direct download actions
 
 ## Update Template
 

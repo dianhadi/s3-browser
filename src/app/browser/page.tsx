@@ -2,6 +2,7 @@ import Link from "next/link";
 import { appConfig } from "@/lib/config";
 import { getAddressingStyleLabel, maskAccessKey } from "@/lib/connection";
 import { logoutAction } from "@/app/login/actions";
+import { DownloadButton } from "@/app/browser/download-button";
 import { getSession } from "@/lib/session";
 import {
   getS3ConnectionSummary,
@@ -14,6 +15,7 @@ import {
   type S3BrowserListing,
 } from "@/lib/s3";
 import { redirect } from "next/navigation";
+import { UploadControl } from "./upload-control";
 import styles from "./page.module.css";
 
 type BrowserPageProps = {
@@ -156,9 +158,11 @@ export default async function BrowserPage({ searchParams }: BrowserPageProps) {
             </div>
           </div>
           <div className={styles.toolbarActions}>
-            <button className={styles.toolbarButton} type="button" disabled>
-              Upload file
-            </button>
+            <UploadControl
+              bucket={activeBucket}
+              disabled={!activeBucket || Boolean(listingError)}
+              prefix={activePrefix}
+            />
             <button className={styles.toolbarButton} type="button" disabled>
               Create folder
             </button>
@@ -193,11 +197,12 @@ export default async function BrowserPage({ searchParams }: BrowserPageProps) {
               </div>
             ) : listing && listing.folders.length + listing.objects.length > 0 ? (
               <div className={styles.objectTable}>
-                <div className={styles.tableHeader}>
-                  <span>Name</span>
-                  <span>Size</span>
-                  <span>Updated</span>
-                </div>
+              <div className={styles.tableHeader}>
+                <span>Name</span>
+                <span>Size</span>
+                <span>Updated</span>
+                <span>Action</span>
+              </div>
 
                 {listing.folders.map((folder) => (
                   <Link
@@ -211,6 +216,7 @@ export default async function BrowserPage({ searchParams }: BrowserPageProps) {
                     </div>
                     <span>-</span>
                     <span>-</span>
+                    <span>-</span>
                   </Link>
                 ))}
 
@@ -222,13 +228,14 @@ export default async function BrowserPage({ searchParams }: BrowserPageProps) {
                     </div>
                     <span>{formatBytes(object.size)}</span>
                     <span>{formatDate(object.lastModified)}</span>
+                    <DownloadButton bucket={activeBucket} objectKey={object.key} />
                   </div>
                 ))}
               </div>
             ) : (
               <div className={styles.emptyState}>
-                This location is empty. Upload files or create a folder in a
-                later phase.
+                This location is empty. Upload a file here to populate the current
+                prefix.
               </div>
             )}
           </div>
