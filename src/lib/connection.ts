@@ -2,6 +2,9 @@ import { z } from "zod";
 
 export const addressingStyleSchema = z.enum(["path", "virtual"]);
 
+const ipAddressPattern =
+  /^(?:\d{1,3}\.){3}\d{1,3}$|^\[[a-fA-F0-9:]+\]$|^[a-fA-F0-9:]+$/;
+
 const endpointSchema = z
   .string()
   .trim()
@@ -50,13 +53,23 @@ export const connectionInputSchema = z.object({
 });
 
 export type ConnectionInput = z.infer<typeof connectionInputSchema>;
+export const connectionSessionSchema = z.object({
+  endpoint: z.string(),
+  region: z.string(),
+  accessKeyId: z.string(),
+  secretAccessKey: z.string(),
+  addressingStyle: addressingStyleSchema,
+});
 
-export type ConnectionSession = {
-  endpoint: string;
-  region: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  addressingStyle: z.infer<typeof addressingStyleSchema>;
+export type ConnectionSession = z.infer<typeof connectionSessionSchema>;
+
+export type EndpointDetails = {
+  origin: string;
+  protocol: "http" | "https";
+  hostname: string;
+  port: string;
+  isLocalhost: boolean;
+  isIpAddress: boolean;
 };
 
 export function normalizeEndpoint(value: string) {
@@ -77,6 +90,34 @@ export function normalizeConnectionInput(
     secretAccessKey: input.secretAccessKey.trim(),
     addressingStyle: input.addressingStyle,
   };
+}
+
+export function getEndpointDetails(endpoint: string): EndpointDetails {
+  const url = new URL(normalizeEndpoint(endpoint));
+  const hostname = url.hostname.toLowerCase();
+
+  return {
+    origin: url.origin,
+    protocol: url.protocol === "https:" ? "https" : "http",
+    hostname,
+    port: url.port,
+    isLocalhost: isLocalhostHostname(hostname),
+    isIpAddress: isIpAddress(hostname),
+  };
+}
+
+export function getAddressingStyleLabel(
+  addressingStyle: ConnectionSession["addressingStyle"],
+) {
+  return addressingStyle === "path" ? "Path-style" : "Virtual-hosted";
+}
+
+export function isLocalhostHostname(hostname: string) {
+  return hostname === "localhost" || hostname.endsWith(".localhost");
+}
+
+export function isIpAddress(hostname: string) {
+  return ipAddressPattern.test(hostname);
 }
 
 export function maskAccessKey(accessKeyId: string) {

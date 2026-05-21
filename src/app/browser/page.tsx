@@ -2,6 +2,7 @@ import { appConfig } from "@/lib/config";
 import { maskAccessKey } from "@/lib/connection";
 import { logoutAction } from "@/app/login/actions";
 import { getSession } from "@/lib/session";
+import { getS3ConnectionSummary } from "@/lib/s3";
 import { redirect } from "next/navigation";
 import styles from "./page.module.css";
 
@@ -23,6 +24,8 @@ export default async function BrowserPage() {
   if (!session) {
     redirect("/login");
   }
+
+  const summary = getS3ConnectionSummary(session);
 
   return (
     <main className={styles.page}>
@@ -50,18 +53,21 @@ export default async function BrowserPage() {
         <section className={styles.quickActions}>
           <div className={styles.quickAction}>
             <strong>Endpoint</strong>
-            <span>{session.endpoint}</span>
+            <span>{summary.endpoint}</span>
           </div>
           <div className={styles.quickAction}>
-            <strong>Region</strong>
-            <span>{session.region}</span>
+            <strong>Connection</strong>
+            <span>
+              {summary.protocol.toUpperCase()}
+              {summary.port ? `:${summary.port}` : ""}
+              {" / "}
+              {summary.hostname}
+            </span>
           </div>
           <div className={styles.quickAction}>
             <strong>Session</strong>
             <span>
-              {session.addressingStyle === "path"
-                ? "Path-style"
-                : "Virtual-hosted"}
+              {summary.addressingLabel}
               {" / "}
               {maskAccessKey(session.accessKeyId)}
             </span>

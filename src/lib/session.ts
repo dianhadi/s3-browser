@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { EncryptJWT, jwtDecrypt } from "jose";
 import { appConfig } from "@/lib/config";
 import {
-  addressingStyleSchema,
+  connectionSessionSchema,
   type ConnectionSession,
 } from "@/lib/connection";
 
@@ -25,22 +25,6 @@ function getSessionSecret() {
 
 function getSessionExpiryDate() {
   return new Date(Date.now() + appConfig.sessionDurationHours * 60 * 60 * 1000);
-}
-
-function isConnectionSession(value: unknown): value is ConnectionSession {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-
-  return (
-    typeof candidate.endpoint === "string" &&
-    typeof candidate.region === "string" &&
-    typeof candidate.accessKeyId === "string" &&
-    typeof candidate.secretAccessKey === "string" &&
-    addressingStyleSchema.safeParse(candidate.addressingStyle).success
-  );
 }
 
 export async function createSession(connection: ConnectionSession) {
@@ -73,11 +57,17 @@ export async function getSession() {
       clockTolerance: 5,
     });
 
-    if (!("connection" in payload) || !isConnectionSession(payload.connection)) {
+    if (!("connection" in payload)) {
       return null;
     }
 
-    return payload.connection;
+    const parsed = connectionSessionSchema.safeParse(payload.connection);
+
+    if (!parsed.success) {
+      return null;
+    }
+
+    return parsed.data;
   } catch {
     return null;
   }

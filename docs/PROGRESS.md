@@ -73,13 +73,13 @@ Exit criteria:
 
 Goal: centralize S3-compatible access logic.
 
-- [ ] Create S3 client factory from session credentials
-- [ ] Support HTTP/HTTPS endpoints
-- [ ] Support localhost, IP, and internal hostnames
-- [ ] Support virtual-hosted style
-- [ ] Support path-style addressing
-- [ ] Add key/prefix normalization helpers
-- [ ] Add error mapping for common S3 failures
+- [x] Create S3 client factory from session credentials
+- [x] Support HTTP/HTTPS endpoints
+- [x] Support localhost, IP, and internal hostnames
+- [x] Support virtual-hosted style
+- [x] Support path-style addressing
+- [x] Add key/prefix normalization helpers
+- [x] Add error mapping for common S3 failures
 
 Exit criteria:
 
@@ -163,6 +163,8 @@ Exit criteria:
 - Added encrypted cookie session flow and S3-compatible login validation
 - Protected `/browser` and added sign-out flow
 - Removed remote font dependency so local builds do not need external font fetches
+- Added reusable S3 client abstraction, endpoint summaries, and object key normalization helpers
+- Unified session validation around shared connection schema and typed S3 error mapping
 
 ## Update Template
 
