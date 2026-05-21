@@ -26,8 +26,7 @@
 }
 
 .brand p,
-.statusNote,
-.footer {
+.statusNote {
   color: rgba(255, 253, 248, 0.7);
   line-height: 1.6;
 }
@@ -90,6 +89,17 @@
   padding: 16px;
   border-radius: 18px;
   background: rgba(255, 253, 248, 0.06);
+}
+
+.logoutButton {
+  width: 100%;
+  border: 1px solid rgba(255, 253, 248, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.08);
+  color: var(--text-inverse);
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .main {

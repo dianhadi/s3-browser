@@ -53,6 +53,14 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
+Environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+Set `SESSION_SECRET` to a long random string before using the login flow.
+
 ## Documentation
 
 - Project rules: `AGENTS.md`

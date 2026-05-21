@@ -1,7 +1,16 @@
 import { appConfig } from "@/lib/config";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { LoginForm } from "./login-form";
 import styles from "./page.module.css";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getSession();
+
+  if (session) {
+    redirect("/browser");
+  }
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -34,78 +43,12 @@ export default function LoginPage() {
           <div className={styles.cardHeader}>
             <h2>Connect to storage</h2>
             <p>
-              Placeholder for Phase 2. This form will validate the endpoint and
-              create an encrypted session without storing credentials in a
-              database.
+              Sign in with S3-compatible credentials. The app will validate the
+              endpoint and create an encrypted session without storing
+              credentials in a database.
             </p>
           </div>
-
-          <form className={styles.grid}>
-            <div className={styles.field}>
-              <label htmlFor="endpoint">Endpoint</label>
-              <input
-                id="endpoint"
-                name="endpoint"
-                placeholder="http://127.0.0.1:9000"
-                disabled
-              />
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.field}>
-                <label htmlFor="region">Region</label>
-                <input
-                  id="region"
-                  name="region"
-                  placeholder="us-east-1"
-                  disabled
-                />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="addressingStyle">Addressing style</label>
-                <select id="addressingStyle" name="addressingStyle" disabled>
-                  <option>Path-style</option>
-                  <option>Virtual-hosted</option>
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.field}>
-                <label htmlFor="accessKeyId">Access key</label>
-                <input
-                  id="accessKeyId"
-                  name="accessKeyId"
-                  placeholder="minioadmin"
-                  disabled
-                />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="secretAccessKey">Secret key</label>
-                <input
-                  id="secretAccessKey"
-                  name="secretAccessKey"
-                  placeholder="••••••••"
-                  type="password"
-                  disabled
-                />
-              </div>
-            </div>
-
-            <p className={styles.hint}>
-              Phase 2 will enable endpoint validation, credential checks, and
-              encrypted session cookie creation.
-            </p>
-
-            <div className={styles.actions}>
-              <p className={styles.actionMeta}>
-                The browser placeholder route is ready at <code>/browser</code>.
-              </p>
-              <button className={styles.submitButton} type="button" disabled>
-                Sign in in Phase 2
-              </button>
-            </div>
-          </form>
+          <LoginForm />
         </div>
       </section>
     </main>

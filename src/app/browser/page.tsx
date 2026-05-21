@@ -1,4 +1,8 @@
 import { appConfig } from "@/lib/config";
+import { maskAccessKey } from "@/lib/connection";
+import { logoutAction } from "@/app/login/actions";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 import styles from "./page.module.css";
 
 const placeholderBuckets = [
@@ -13,13 +17,19 @@ const placeholderObjects = [
   { name: "reports/q2-summary.pdf", size: "2.1 MB", updated: "2026-05-18" },
 ];
 
-export default function BrowserPage() {
+export default async function BrowserPage() {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
   return (
     <main className={styles.page}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
           <h1>{appConfig.appName}</h1>
-          <p>Browser placeholder for bucket and object navigation.</p>
+          <p>Connected session placeholder for bucket and object navigation.</p>
         </div>
 
         <section className={styles.bucketPanel}>
@@ -39,23 +49,30 @@ export default function BrowserPage() {
 
         <section className={styles.quickActions}>
           <div className={styles.quickAction}>
-            <strong>Upload</strong>
-            <span>Phase 5 will use presigned PUT URLs.</span>
+            <strong>Endpoint</strong>
+            <span>{session.endpoint}</span>
           </div>
           <div className={styles.quickAction}>
-            <strong>Download</strong>
-            <span>Phase 5 will trigger downloads through presigned GET URLs.</span>
+            <strong>Region</strong>
+            <span>{session.region}</span>
           </div>
           <div className={styles.quickAction}>
-            <strong>Metadata</strong>
-            <span>Phase 6 will show details for the selected object.</span>
+            <strong>Session</strong>
+            <span>
+              {session.addressingStyle === "path"
+                ? "Path-style"
+                : "Virtual-hosted"}
+              {" / "}
+              {maskAccessKey(session.accessKeyId)}
+            </span>
           </div>
         </section>
 
-        <p className={styles.footer}>
-          This route is not protected yet. Session guards will be added in
-          Phase 2.
-        </p>
+        <form action={logoutAction}>
+          <button className={styles.logoutButton} type="submit">
+            Sign out
+          </button>
+        </form>
       </aside>
 
       <section className={styles.main}>

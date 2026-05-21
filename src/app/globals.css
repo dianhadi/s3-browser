@@ -31,7 +31,8 @@ body {
     radial-gradient(circle at top left, rgba(217, 119, 6, 0.14), transparent 28%),
     radial-gradient(circle at top right, rgba(39, 52, 70, 0.12), transparent 32%),
     linear-gradient(180deg, #f7f2e8 0%, #f4efe4 100%);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family:
+    "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

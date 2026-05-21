@@ -54,14 +54,14 @@ Exit criteria:
 
 Goal: user can log in with S3-compatible credentials and establish an encrypted session.
 
-- [ ] Define connection payload schema
-- [ ] Build login form
-- [ ] Validate endpoint, region, and addressing style inputs
-- [ ] Implement encrypted cookie session utilities
-- [ ] Implement login route/action
-- [ ] Validate credentials with a lightweight S3 call
-- [ ] Implement logout flow
-- [ ] Protect browser routes when session is absent
+- [x] Define connection payload schema
+- [x] Build login form
+- [x] Validate endpoint, region, and addressing style inputs
+- [x] Implement encrypted cookie session utilities
+- [x] Implement login route/action
+- [x] Validate credentials with a lightweight S3 call
+- [x] Implement logout flow
+- [x] Protect browser routes when session is absent
 
 Exit criteria:
 
@@ -160,6 +160,9 @@ Exit criteria:
 - Replaced template `README.md` with project-specific setup notes
 - Added Phase 1 route skeleton for `/login` and `/browser`
 - Added shared app config and `.env.example`
+- Added encrypted cookie session flow and S3-compatible login validation
+- Protected `/browser` and added sign-out flow
+- Removed remote font dependency so local builds do not need external font fetches
 
 ## Update Template
 
