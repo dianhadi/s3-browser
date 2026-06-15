@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./page.module.css";
 
 type DownloadButtonProps = {
   bucket: string;
   objectKey: string;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 };
 
-export function DownloadButton({ bucket, objectKey }: DownloadButtonProps) {
+export function DownloadButton({
+  bucket,
+  objectKey,
+  onClick,
+}: DownloadButtonProps) {
   const [isPending, setIsPending] = useState(false);
 
   async function handleDownload() {
@@ -43,9 +47,10 @@ export function DownloadButton({ bucket, objectKey }: DownloadButtonProps) {
 
   return (
     <button
-      className={styles.inlineActionButton}
+      className="inline-flex w-fit cursor-pointer items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 font-semibold text-blue-600 transition hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700 disabled:cursor-wait disabled:opacity-70"
       disabled={isPending}
-      onClick={() => {
+      onClick={(event) => {
+        onClick?.(event);
         void handleDownload();
       }}
       type="button"

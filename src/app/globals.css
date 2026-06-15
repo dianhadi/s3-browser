@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --bg-canvas: #f4efe4;
   --bg-panel: rgba(255, 251, 244, 0.8);
@@ -27,10 +29,7 @@ body {
 body {
   min-height: 100%;
   color: var(--text-primary);
-  background:
-    radial-gradient(circle at top left, rgba(217, 119, 6, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(39, 52, 70, 0.12), transparent 32%),
-    linear-gradient(180deg, #f7f2e8 0%, #f4efe4 100%);
+  background: #ffffff;
   font-family:
     "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -39,8 +38,6 @@ body {
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
 a {

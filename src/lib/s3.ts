@@ -83,6 +83,7 @@ export type PresignedUploadRequest = {
 export type PresignedDownloadRequest = {
   bucket: string;
   key: string;
+  disposition?: "attachment" | "inline";
 };
 
 export type S3ObjectMetadata = {
@@ -278,12 +279,13 @@ export async function createPresignedDownloadUrl(
   const bucket = normalizeBucketName(request.bucket);
   const key = normalizeObjectKey(request.key);
   const fileName = key.split("/").pop() || "download";
+  const disposition = request.disposition || "attachment";
 
   try {
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
-      ResponseContentDisposition: `attachment; filename="${fileName}"`,
+      ResponseContentDisposition: `${disposition}; filename="${fileName}"`,
     });
 
     const url = await getSignedUrl(client, command, { expiresIn: 900 });

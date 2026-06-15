@@ -3,7 +3,6 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { joinObjectKey } from "@/lib/s3";
-import styles from "./page.module.css";
 
 type UploadControlProps = {
   bucket: string;
@@ -38,8 +37,6 @@ export function UploadControl({
       progress: 0,
     });
 
-    let presigned: { url: string } | null = null;
-
     try {
       const response = await fetch("/api/uploads/presign", {
         method: "POST",
@@ -59,8 +56,7 @@ export function UploadControl({
         throw new Error(payload.error || "Could not prepare the upload.");
       }
 
-      presigned = { url: payload.url };
-      await uploadWithProgress(presigned.url, file, (progress) => {
+      await uploadWithProgress(payload.url, file, (progress) => {
         setState({
           kind: "progress",
           fileName: file.name,
@@ -90,9 +86,9 @@ export function UploadControl({
   }
 
   return (
-    <div className={styles.transferControl}>
+    <div className="grid self-start gap-1.5">
       <input
-        className={styles.hiddenInput}
+        className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
 
@@ -104,23 +100,22 @@ export function UploadControl({
         type="file"
       />
       <button
-        className={styles.toolbarButton}
+        className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 font-semibold text-blue-600 transition hover:border-blue-400 hover:bg-blue-100 hover:text-blue-700 disabled:cursor-wait disabled:opacity-70"
         disabled={isDisabled}
         onClick={() => inputRef.current?.click()}
         type="button"
       >
+        <UploadIcon />
         {state.kind === "progress" ? `Uploading ${state.progress}%` : "Upload file"}
       </button>
-      <p className={styles.transferMessage}>
+      <p className="max-w-[280px] text-[0.82rem] leading-6 text-slate-500">
         {state.kind === "progress"
           ? `${state.fileName} is uploading.`
           : state.kind === "success"
             ? state.message
             : state.kind === "error"
               ? state.message
-              : bucket
-                ? "Uploads use presigned PUT URLs and refresh the listing after success."
-                : "Select a bucket before uploading."}
+              : ""}
       </p>
     </div>
   );
@@ -159,4 +154,29 @@ function uploadWithProgress(
 
     xhr.send(file);
   });
+}
+
+function UploadIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-[18px]"
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 16V5M12 5L8 9M12 5L16 9"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M5 18.5C5 17.6716 5.67157 17 6.5 17H17.5C18.3284 17 19 17.6716 19 18.5C19 19.3284 18.3284 20 17.5 20H6.5C5.67157 20 5 19.3284 5 18.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
 }
